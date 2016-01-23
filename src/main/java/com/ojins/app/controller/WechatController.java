@@ -56,13 +56,12 @@ public class WechatController {
 
     @RequestMapping(method = RequestMethod.GET,
             produces = "text/html;charset=utf-8")
-    public ResponseEntity<String> getResponse(@RequestParam String signature,
-                                              @RequestParam String nonce,
-                                              @RequestParam String timestamp,
+    public ResponseEntity<String> getResponse(@RequestParam(defaultValue = "") String signature,
+                                              @RequestParam(defaultValue = "") String nonce,
+                                              @RequestParam(defaultValue = "") String timestamp,
                                               @RequestParam(defaultValue = "") String echostr,
                                               @RequestParam(defaultValue = "raw") String encrypt_type,
-                                              @RequestParam(defaultValue = "") String msg_signature,
-                                              @RequestPart String request) throws IOException {
+                                              @RequestParam(defaultValue = "") String msg_signature) throws IOException {
         if (!wxMpService.checkSignature(timestamp, nonce, signature)) {
             // 消息签名不正确，说明不是公众平台发过来的消息
             logger.warn("消息签名不正确");
@@ -72,9 +71,10 @@ public class WechatController {
         if (StringUtils.isNotBlank(echostr)) {
             // 说明是一个仅仅用来验证的请求，回显echostr
             logger.info("一个仅仅用来验证的请求");
-            return new ResponseEntity<>("非法请求", HttpStatus.OK);
+            return new ResponseEntity<>(echostr, HttpStatus.OK);
         }
 
+        /*
         if ("raw".equals(encrypt_type)) {
             // 明文传输的消息
             WxMpXmlMessage inMessage = WxMpXmlMessage.fromXml(
@@ -94,6 +94,7 @@ public class WechatController {
             logger.info("是aes加密的消息");
             return new ResponseEntity<>(outMessage.toXml(), HttpStatus.OK);
         }
+        */
 
         logger.warn("不可识别的加密类型");
         return new ResponseEntity<>("不可识别的加密类型", HttpStatus.OK);
