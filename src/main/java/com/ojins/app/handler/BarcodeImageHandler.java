@@ -12,8 +12,6 @@ import me.chanjar.weixin.mp.api.WxMpMessageHandler;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlOutMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -24,11 +22,10 @@ import java.util.stream.Collectors;
 /**
  * Created by nwang on 24/01/16.
  */
-public class BarcodeImageHandler implements WxMpMessageHandler {
+public class BarcodeImageHandler extends BaseHandler implements WxMpMessageHandler{
 
     private static final Map<DecodeHintType,Object> HINTS;
     private static final Map<DecodeHintType,Object> HINTS_PURE;
-    private static transient final Logger LOG = LoggerFactory.getLogger(BarcodeImageHandler.class);
 
     static {
         HINTS = new EnumMap<>(DecodeHintType.class);
@@ -45,28 +42,27 @@ public class BarcodeImageHandler implements WxMpMessageHandler {
 
         long startTime = System.currentTimeMillis();
 
-        LOG.info("Media Id: {}", wxMpXmlMessage.getMediaId());
-        LOG.info("Media URL: {}", wxMpXmlMessage.getPicUrl());
-
-        LOG.info("Downloading media {} from server...");
+        logger.info("Media Id: {}", wxMpXmlMessage.getMediaId());
+        logger.info("Media URL: {}", wxMpXmlMessage.getPicUrl());
+        logger.info("Downloading media from server...");
         // FIXME: The out message is already returned before the downloading complete.
         File file = wxMpService.mediaDownload(wxMpXmlMessage.getMediaId());
-        LOG.info("Done!");
+        logger.info("Done!");
 
         Collection<Result> results = null;
         // load file into in-memory-image
         try {
             BufferedImage img = ImageIO.read(file);
-            LOG.info("Recognizing barcode...");
+            logger.info("Recognizing barcode...");
             results = processImage(img);
-            LOG.info("Done!");
+            logger.info("Done!");
         } catch (IOException e) {
-            LOG.error(e.getMessage());
+            logger.error(e.getMessage());
         }
 
         long estimatedTime = System.currentTimeMillis() - startTime;
 
-        LOG.info("Server takes {} ms", estimatedTime);
+        logger.info("Server takes {} ms", estimatedTime);
 
         if (results != null) {
             return WxMpXmlOutMessage
@@ -89,14 +85,13 @@ public class BarcodeImageHandler implements WxMpMessageHandler {
 
 
 
-    private static Collection<Result> processImage(BufferedImage image) {
+    private Collection<Result> processImage(BufferedImage image) {
 
         LuminanceSource source = new BufferedImageLuminanceSource(image);
         BinaryBitmap bitmap = new BinaryBitmap(new GlobalHistogramBinarizer(source));
         Collection<Result> results = new ArrayList<>(1);
 
         try {
-
             Reader reader = new MultiFormatReader();
             ReaderException savedException = null;
             try {
@@ -151,16 +146,16 @@ public class BarcodeImageHandler implements WxMpMessageHandler {
                 try {
                     throw savedException == null ? NotFoundException.getNotFoundInstance() : savedException;
                 } catch (FormatException | ChecksumException e) {
-                    LOG.error(e.getMessage());
+                    logger.error(e.getMessage());
                 } catch (ReaderException e) {
-                    LOG.error(e.getMessage());
+                    logger.error(e.getMessage());
                 }
                 return null;
             }
 
         } catch (RuntimeException re) {
             // Call out unexpected errors in the log clearly
-            LOG.error("Unexpected exception from library: {}", re);
+            logger.error("Unexpected exception from library: {}", re);
 
         }
 

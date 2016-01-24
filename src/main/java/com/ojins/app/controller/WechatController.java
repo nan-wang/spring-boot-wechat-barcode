@@ -82,7 +82,7 @@ public class WechatController {
     }
 
     @RequestMapping(method = RequestMethod.POST,
-            produces = "text/html;charset=utf-8")
+                    produces = "text/html;charset=utf-8")
     public ResponseEntity<String> getResponse(@RequestParam(defaultValue = "") String signature,
                                               @RequestParam(defaultValue = "") String nonce,
                                               @RequestParam(defaultValue = "") String timestamp,
@@ -110,7 +110,7 @@ public class WechatController {
             if (outMessage == null) {
                 return new ResponseEntity<>(HttpStatus.OK);
             }
-            logger.info("barcode = {}",((WxMpXmlOutTextMessage) outMessage).getContent());
+            logger.info("明文传输的消息, content = {}",((WxMpXmlOutTextMessage) outMessage).getContent());
             return new ResponseEntity<>(outMessage.toXml(), HttpStatus.OK);
         }
 
@@ -121,7 +121,10 @@ public class WechatController {
                             new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                             config, timestamp, nonce, msg_signature);
             WxMpXmlOutMessage outMessage = wxMpMessageRouter.route(inMessage);
-            logger.info("是aes加密的消息");
+            if (outMessage == null) {
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            logger.info("aes加密的消息, content = {}",((WxMpXmlOutTextMessage) outMessage).getContent());
             return new ResponseEntity<>(outMessage.toXml(), HttpStatus.OK);
         }
 
