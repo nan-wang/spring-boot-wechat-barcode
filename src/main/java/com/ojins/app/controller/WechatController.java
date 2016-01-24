@@ -1,7 +1,9 @@
 package com.ojins.app.controller;
 
+import com.ojins.app.handler.BarcodeImageHandler;
 import me.chanjar.weixin.mp.api.*;
 import me.chanjar.weixin.mp.bean.WxMpXmlOutMessage;
+import me.chanjar.weixin.mp.bean.WxMpXmlOutTextMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -27,11 +29,12 @@ public class WechatController {
     WxMpInMemoryConfigStorage config = new WxMpInMemoryConfigStorage();
     private WxMpService wxMpService = new WxMpServiceImpl();
     private WxMpMessageRouter wxMpMessageRouter;
+    BarcodeImageHandler barcodeImageHandler = new BarcodeImageHandler();
 
     @PostConstruct
     public void init() throws Exception {
-        config.setAppId("wx32c7228069d88769"); // 设置微信公众号的appid
-        config.setSecret("24bba82c919a543982c78e77ed4b3863"); // 设置微信公众号的app corpSecret
+        config.setAppId("wxbe56750a77d32699"); // 设置微信公众号的appid
+        config.setSecret("111a719fc630269177389e402f77b1e4"); // 设置微信公众号的app corpSecret
         config.setToken("ojinscom"); // 设置微信公众号的token
         config.setAesKey("aoGcSLZpgW12i46uP8AZ2w6z707nSYmg1YLUsxj2Ee2"); // 设置微信公众号的EncodingAESKey
 
@@ -49,10 +52,33 @@ public class WechatController {
         wxMpMessageRouter
                 .rule()
                 .async(false)
-                .content("哈哈") // 拦截内容为“哈哈”的消息
-                .handler(handler)
+                .msgType("image") // forward anykind of image to barcode handler
+                .handler(barcodeImageHandler)
                 .end();
         logger.info("initialized handler.");
+    }
+
+    @RequestMapping(method = RequestMethod.GET,
+                    produces = "text/html;charset=utf-8")
+    public ResponseEntity<String> getVerificationResponse(
+            @RequestParam(defaultValue = "") String signature,
+            @RequestParam(defaultValue = "") String nonce,
+            @RequestParam(defaultValue = "") String timestamp,
+            @RequestParam(defaultValue = "") String echostr) throws IOException {
+        if (!wxMpService.checkSignature(timestamp, nonce, signature)) {
+            // 消息签名不正确，说明不是公众平台发过来的消息
+            logger.warn("消息签名不正确");
+            return new ResponseEntity<>("非法请求", HttpStatus.OK);
+        }
+
+        if (StringUtils.isNotBlank(echostr)) {
+            // 说明是一个仅仅用来验证的请求，回显echostr
+            logger.info("一个仅仅用来验证的请求");
+            return new ResponseEntity<>(echostr, HttpStatus.OK);
+        }
+
+        logger.warn("不可识别的加密类型");
+        return new ResponseEntity<>("不可识别的加密类型", HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST,
@@ -81,7 +107,10 @@ public class WechatController {
             WxMpXmlMessage inMessage = WxMpXmlMessage.fromXml(
                     new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)));
             WxMpXmlOutMessage outMessage = wxMpMessageRouter.route(inMessage);
-            logger.info("明文传输的消息");
+            if (outMessage == null) {
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            logger.info("barcode = {}",((WxMpXmlOutTextMessage) outMessage).getContent());
             return new ResponseEntity<>(outMessage.toXml(), HttpStatus.OK);
         }
 
