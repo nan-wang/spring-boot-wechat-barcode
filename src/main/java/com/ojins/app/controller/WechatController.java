@@ -1,18 +1,16 @@
 package com.ojins.app.controller;
 
 import com.ojins.app.handler.BarcodeImageHandler;
+import me.chanjar.weixin.common.util.StringUtils;
 import me.chanjar.weixin.mp.api.*;
+import me.chanjar.weixin.mp.bean.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlOutMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlOutTextMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import me.chanjar.weixin.common.util.StringUtils;
-import me.chanjar.weixin.mp.bean.WxMpXmlMessage;
 
 import javax.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
@@ -108,6 +106,7 @@ public class WechatController {
                     new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)));
             WxMpXmlOutMessage outMessage = wxMpMessageRouter.route(inMessage);
             if (outMessage == null) {
+                logger.warn("out message is empty!");
                 return new ResponseEntity<>(HttpStatus.OK);
             }
             logger.info("明文传输的消息, content = {}",((WxMpXmlOutTextMessage) outMessage).getContent());
@@ -122,6 +121,7 @@ public class WechatController {
                             config, timestamp, nonce, msg_signature);
             WxMpXmlOutMessage outMessage = wxMpMessageRouter.route(inMessage);
             if (outMessage == null) {
+                logger.warn("out message is empty!");
                 return new ResponseEntity<>(HttpStatus.OK);
             }
             logger.info("aes加密的消息, content = {}",((WxMpXmlOutTextMessage) outMessage).getContent());
