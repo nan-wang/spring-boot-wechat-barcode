@@ -27,12 +27,12 @@ public class WechatController {
     WxMpInMemoryConfigStorage config = new WxMpInMemoryConfigStorage();
     private WxMpService wxMpService = new WxMpServiceImpl();
     private WxMpMessageRouter wxMpMessageRouter;
-    BarcodeImageHandler barcodeImageHandler = new BarcodeImageHandler();
+    BarcodeImageHandler barcodeImageHandler;
 
     @PostConstruct
     public void init() throws Exception {
-        config.setAppId("wxbe56750a77d32699"); // 设置微信公众号的appid
-        config.setSecret("111a719fc630269177389e402f77b1e4"); // 设置微信公众号的app corpSecret
+        config.setAppId("wx4e78170434e60d05"); // 设置微信公众号的appid
+        config.setSecret("1c9f6587177408cdc30f1a351620189e"); // 设置微信公众号的app corpSecret
         config.setToken("ojinscom"); // 设置微信公众号的token
         config.setAesKey("aoGcSLZpgW12i46uP8AZ2w6z707nSYmg1YLUsxj2Ee2"); // 设置微信公众号的EncodingAESKey
 
@@ -47,9 +47,12 @@ public class WechatController {
                         .build();
 
         wxMpMessageRouter = new WxMpMessageRouter(wxMpService);
+
+        barcodeImageHandler = new BarcodeImageHandler(wxMpService);
+
         wxMpMessageRouter
                 .rule()
-                .async(false)
+                .async(true)
                 .msgType("image") // forward anykind of image to barcode handler
                 .handler(barcodeImageHandler)
                 .end();
@@ -106,7 +109,7 @@ public class WechatController {
                     new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)));
             WxMpXmlOutMessage outMessage = wxMpMessageRouter.route(inMessage);
             if (outMessage == null) {
-                logger.warn("out message is empty!");
+                logger.warn("Async is true, thats why out message is always null!");
                 return new ResponseEntity<>(HttpStatus.OK);
             }
             logger.info("明文传输的消息, content = {}",((WxMpXmlOutTextMessage) outMessage).getContent());
@@ -121,7 +124,7 @@ public class WechatController {
                             config, timestamp, nonce, msg_signature);
             WxMpXmlOutMessage outMessage = wxMpMessageRouter.route(inMessage);
             if (outMessage == null) {
-                logger.warn("out message is empty!");
+                logger.warn("Async is true, thats why out message is always null!");
                 return new ResponseEntity<>(HttpStatus.OK);
             }
             logger.info("aes加密的消息, content = {}",((WxMpXmlOutTextMessage) outMessage).getContent());

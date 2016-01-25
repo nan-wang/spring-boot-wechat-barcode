@@ -10,6 +10,7 @@ import me.chanjar.weixin.common.exception.WxErrorException;
 import me.chanjar.weixin.common.session.WxSessionManager;
 import me.chanjar.weixin.mp.api.WxMpMessageHandler;
 import me.chanjar.weixin.mp.api.WxMpService;
+import me.chanjar.weixin.mp.bean.WxMpCustomMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlOutMessage;
 
@@ -27,12 +28,18 @@ public class BarcodeImageHandler extends BaseHandler implements WxMpMessageHandl
     private static final Map<DecodeHintType,Object> HINTS;
     private static final Map<DecodeHintType,Object> HINTS_PURE;
 
+    private WxMpService wxMpService;
+
     static {
         HINTS = new EnumMap<>(DecodeHintType.class);
         HINTS.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
         HINTS.put(DecodeHintType.POSSIBLE_FORMATS, EnumSet.allOf(BarcodeFormat.class));
         HINTS_PURE = new EnumMap<>(HINTS);
         HINTS_PURE.put(DecodeHintType.PURE_BARCODE, Boolean.TRUE);
+    }
+
+    public BarcodeImageHandler(WxMpService wxMpService) {
+        this.wxMpService = wxMpService;
     }
 
     @Override
@@ -65,18 +72,36 @@ public class BarcodeImageHandler extends BaseHandler implements WxMpMessageHandl
         logger.info("Server takes {} ms", estimatedTime);
 
         if (results != null) {
+
+            String resultMsg = results.stream()
+                    .map(Result::getText)
+                    .collect(Collectors.joining(", "));
+
+            sendAdvanceMessage(wxMpXmlMessage.getFromUserName(),
+                    wxMpXmlMessage.getPicUrl(),
+                    resultMsg);
+
+            // below is for syncronized version (under 5s, depreciated)
             return WxMpXmlOutMessage
                     .TEXT()
-                    .content(results.stream()
-                                    .map(Result::getText)
-                                    .collect(Collectors.joining(", ")))
+                    .content(resultMsg)
                     .fromUser(wxMpXmlMessage.getToUserName()) // now server is "from", client is "to"
                     .toUser(wxMpXmlMessage.getFromUserName())
                     .build();
         } else {
+
+            String resultMsg = "No barcode in your photo!";
+
+            wxMpService.customMessageSend(WxMpCustomMessage
+                    .TEXT()
+                    .toUser(wxMpXmlMessage.getFromUserName())
+                    .content(resultMsg)
+                    .build());
+
+
             return WxMpXmlOutMessage
                     .TEXT()
-                    .content("Something wrong!")
+                    .content(resultMsg)
                     .fromUser(wxMpXmlMessage.getToUserName()) // now server is "from", client is "to"
                     .toUser(wxMpXmlMessage.getFromUserName())
                     .build();
@@ -84,6 +109,34 @@ public class BarcodeImageHandler extends BaseHandler implements WxMpMessageHandl
     }
 
 
+    private void sendCustomMessage(String toUser, String barCode) throws WxErrorException {
+
+        wxMpService.customMessageSend(WxMpCustomMessage
+                .TEXT()
+                .toUser(toUser)
+                .content(barCode)
+                .build());
+    }
+
+
+    private void sendAdvanceMessage(String toUser, String largePicUrl, String barCode) throws WxErrorException {
+
+        WxMpCustomMessage.WxArticle article1 = new WxMpCustomMessage.WxArticle();
+        article1.setUrl("http://ojins.com");
+        article1.setPicUrl(largePicUrl);
+        article1.setTitle("条形码:"+ barCode + "上面应该放开箱渲染图");
+
+        WxMpCustomMessage.WxArticle article2 = new WxMpCustomMessage.WxArticle();
+        article2.setUrl("http://ojins.com");
+        article2.setPicUrl("http://lorempixel.com/200/200/cats/");
+        article2.setTitle("两行字的高度正好对齐200px");
+
+        wxMpService.customMessageSend(WxMpCustomMessage.NEWS()
+                .toUser(toUser)
+                .addArticle(article1)
+                .addArticle(article2)
+                .build());
+    }
 
     private Collection<Result> processImage(BufferedImage image) {
 
