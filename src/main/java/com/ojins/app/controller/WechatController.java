@@ -47,9 +47,7 @@ public class WechatController {
     @PostConstruct
     public void init() throws Exception {
         config.setAppId(appId); // 设置微信公众号的appid
-//        config.setAppId("wx4e78170434e60d05"); // 设置微信公众号的appid
         config.setSecret(secretKey); // 设置微信公众号的app corpSecret
-//        config.setSecret("1c9f6587177408cdc30f1a351620189e"); // 设置微信公众号的app corpSecret
         config.setToken("ojinscom"); // 设置微信公众号的token
         config.setAesKey("aoGcSLZpgW12i46uP8AZ2w6z707nSYmg1YLUsxj2Ee2"); // 设置微信公众号的EncodingAESKey
 
@@ -73,6 +71,8 @@ public class WechatController {
                 .msgType("image") // forward anykind of image to barcode handler
                 .handler(barcodeImageHandler)
                 .end();
+
+        // load the database
         logger.info("initialized handler.");
     }
 
