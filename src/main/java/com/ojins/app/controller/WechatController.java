@@ -8,6 +8,7 @@ import me.chanjar.weixin.mp.bean.WxMpXmlOutMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlOutTextMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +30,26 @@ public class WechatController {
     private WxMpMessageRouter wxMpMessageRouter;
     BarcodeImageHandler barcodeImageHandler;
 
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
+
+    @Value("${app.controller.appId}")
+    private String appId;
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
+    }
+
+    @Value("${app.controller.secretKey}")
+    private String secretKey;
+
     @PostConstruct
     public void init() throws Exception {
-        config.setAppId("wx4e78170434e60d05"); // 设置微信公众号的appid
-        config.setSecret("1c9f6587177408cdc30f1a351620189e"); // 设置微信公众号的app corpSecret
+        config.setAppId(appId); // 设置微信公众号的appid
+//        config.setAppId("wx4e78170434e60d05"); // 设置微信公众号的appid
+        config.setSecret(secretKey); // 设置微信公众号的app corpSecret
+//        config.setSecret("1c9f6587177408cdc30f1a351620189e"); // 设置微信公众号的app corpSecret
         config.setToken("ojinscom"); // 设置微信公众号的token
         config.setAesKey("aoGcSLZpgW12i46uP8AZ2w6z707nSYmg1YLUsxj2Ee2"); // 设置微信公众号的EncodingAESKey
 
