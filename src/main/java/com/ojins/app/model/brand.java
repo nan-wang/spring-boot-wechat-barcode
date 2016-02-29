@@ -1,5 +1,6 @@
 package com.ojins.app.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -51,8 +52,10 @@ public class Brand {
     @Id
     private Integer brandId;
     private String brandName;
+    @Column(columnDefinition="TEXT")
     private String brandDescription;
     private String brandNameCN;
+    @Column(columnDefinition="TEXT")
     private String brandDescriptionCN;
 
     public Brand() {}
