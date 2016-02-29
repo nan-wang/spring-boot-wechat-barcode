@@ -6,8 +6,6 @@ import me.chanjar.weixin.mp.api.*;
 import me.chanjar.weixin.mp.bean.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlOutMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlOutTextMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +21,7 @@ import java.nio.charset.StandardCharsets;
  */
 @RestController
 @RequestMapping("/")
-public class WechatController {
-    protected Logger logger = LoggerFactory.getLogger(this.getClass());
+public class WechatController extends BaseController{
     WxMpInMemoryConfigStorage config = new WxMpInMemoryConfigStorage();
     private WxMpService wxMpService = new WxMpServiceImpl();
     private WxMpMessageRouter wxMpMessageRouter;

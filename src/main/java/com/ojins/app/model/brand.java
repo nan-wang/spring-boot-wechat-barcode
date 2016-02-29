@@ -7,7 +7,7 @@ import javax.persistence.Id;
  * Created by nwang on 21/02/16.
  */
 @Entity
-public class brand {
+public class Brand {
     public Integer getBrandId() {
         return brandId;
     }
@@ -40,12 +40,12 @@ public class brand {
         this.brandNameCN = brandNameCN;
     }
 
-    public String getGetBrandDescriptionCN() {
-        return getBrandDescriptionCN;
+    public String getBrandDescriptionCN() {
+        return brandDescriptionCN;
     }
 
-    public void setGetBrandDescriptionCN(String getBrandDescriptionCN) {
-        this.getBrandDescriptionCN = getBrandDescriptionCN;
+    public void setBrandDescriptionCN(String brandDescriptionCN) {
+        this.brandDescriptionCN = brandDescriptionCN;
     }
 
     @Id
@@ -53,20 +53,20 @@ public class brand {
     private String brandName;
     private String brandDescription;
     private String brandNameCN;
-    private String getBrandDescriptionCN;
+    private String brandDescriptionCN;
 
-    public brand() {}
+    public Brand() {}
 
-    public brand(Integer brandId, String brandName, String brandDescription,
-                 String brandNameCN, String getBrandDescriptionCN) {
+    public Brand(Integer brandId, String brandName, String brandDescription,
+                 String brandNameCN, String brandDescriptionCN) {
         this.brandId = brandId;
         this.brandName = brandName;
         this.brandDescription = brandDescription;
         this.brandNameCN = brandNameCN;
-        this.getBrandDescriptionCN = getBrandDescriptionCN;
+        this.brandDescriptionCN = brandDescriptionCN;
     }
 
-    public brand(Integer brandId, String brandName, String brandDescription) {
+    public Brand(Integer brandId, String brandName, String brandDescription) {
         this.brandId = brandId;
         this.brandName = brandName;
         this.brandDescription = brandDescription;

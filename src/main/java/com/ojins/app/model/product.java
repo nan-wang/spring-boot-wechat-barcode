@@ -2,12 +2,13 @@ package com.ojins.app.model;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.validation.constraints.Size;
 
 /**
  * Created by nwang on 21/02/16.
  */
 @Entity
-public class product {
+public class Product {
     private String mandatoryInfo_0;
     private String allergyInfo;
     private String analyticalConsituents;
@@ -262,10 +263,10 @@ public class product {
         this.size = size;
     }
 
-    public product() {
+    public Product() {
     }
 
-    public product(String mandatoryInfo_0, String allergyInfo, String analyticalConsituents, String companyAddress, String notes_0, String notes_1, String statement, String placeOfOrigin, String ingredients_0, String nutritionalInfo, String mandatoryInfo_1, String warnings_0, String warnings_1, String warnings_2, String notes_2, String registrationNumber, String ingredients_1, String additives, String ingredients_2, String barCode, String brand, String description, String img, String imgAlt, String link, String name, Float price, String size) {
+    public Product(String mandatoryInfo_0, String allergyInfo, String analyticalConsituents, String companyAddress, String notes_0, String notes_1, String statement, String placeOfOrigin, String ingredients_0, String nutritionalInfo, String mandatoryInfo_1, String warnings_0, String warnings_1, String warnings_2, String notes_2, String registrationNumber, String ingredients_1, String additives, String ingredients_2, String barCode, String brand, String description, String img, String imgAlt, String link, String name, Float price, String size) {
         this.mandatoryInfo_0 = mandatoryInfo_0;
         this.allergyInfo = allergyInfo;
         this.analyticalConsituents = analyticalConsituents;
