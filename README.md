@@ -10,3 +10,7 @@ Server: return the product information with `{barcode}`
 
 Client: `GET` request to `/brand/{brandId}`
 Server return the brand information with `{brandId}`
+
+## ngrok
+    
+    ./ngrok http 8080

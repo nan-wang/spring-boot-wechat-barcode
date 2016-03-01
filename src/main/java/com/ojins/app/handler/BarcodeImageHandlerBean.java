@@ -6,6 +6,8 @@ import com.google.zxing.common.GlobalHistogramBinarizer;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.multi.GenericMultipleBarcodeReader;
 import com.google.zxing.multi.MultipleBarcodeReader;
+import com.ojins.app.model.Product;
+import com.ojins.app.service.ProductService;
 import me.chanjar.weixin.common.exception.WxErrorException;
 import me.chanjar.weixin.common.session.WxSessionManager;
 import me.chanjar.weixin.mp.api.WxMpMessageHandler;
@@ -13,6 +15,7 @@ import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.WxMpCustomMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlOutMessage;
+import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -23,12 +26,14 @@ import java.util.stream.Collectors;
 /**
  * Created by nwang on 24/01/16.
  */
-public class BarcodeImageHandler extends BaseHandler implements WxMpMessageHandler{
+@Component
+public class BarcodeImageHandlerBean extends BaseHandler implements WxMpMessageHandler{
 
     private static final Map<DecodeHintType,Object> HINTS;
     private static final Map<DecodeHintType,Object> HINTS_PURE;
 
     private WxMpService wxMpService;
+    private ProductService productService;
 
     static {
         HINTS = new EnumMap<>(DecodeHintType.class);
@@ -38,8 +43,11 @@ public class BarcodeImageHandler extends BaseHandler implements WxMpMessageHandl
         HINTS_PURE.put(DecodeHintType.PURE_BARCODE, Boolean.TRUE);
     }
 
-    public BarcodeImageHandler(WxMpService wxMpService) {
+    public BarcodeImageHandlerBean() {}
+
+    public BarcodeImageHandlerBean(WxMpService wxMpService, ProductService productService) {
         this.wxMpService = wxMpService;
+        this.productService = productService;
     }
 
     @Override
@@ -77,9 +85,20 @@ public class BarcodeImageHandler extends BaseHandler implements WxMpMessageHandl
                     .map(Result::getText)
                     .collect(Collectors.joining(", "));
 
+            Product product = productService.findProductByBarcode(resultMsg);
+
+            if (product == null) {
+                logger.warn("Barcode {} is not found in database.", resultMsg);
+                return WxMpXmlOutMessage
+                        .TEXT()
+                        .content("抱歉没有找到该产品")
+                        .fromUser(wxMpXmlMessage.getToUserName()) // now server is "from", client is "to"
+                        .toUser(wxMpXmlMessage.getFromUserName())
+                        .build();
+            }
             sendAdvanceMessage(wxMpXmlMessage.getFromUserName(),
                     wxMpXmlMessage.getPicUrl(),
-                    resultMsg);
+                    product);
 
             // below is for syncronized version (under 5s, depreciated)
             return WxMpXmlOutMessage
@@ -115,6 +134,32 @@ public class BarcodeImageHandler extends BaseHandler implements WxMpMessageHandl
                 .TEXT()
                 .toUser(toUser)
                 .content(barCode)
+                .build());
+    }
+
+
+    private void sendAdvanceMessage(String toUser, String largePicUrl, Product product) throws WxErrorException {
+
+        WxMpCustomMessage.WxArticle article1 = new WxMpCustomMessage.WxArticle();
+        article1.setUrl(product.getLink());
+        article1.setPicUrl(product.getImg());
+        article1.setTitle(product.getBrand() + " " + product.getName());
+
+        WxMpCustomMessage.WxArticle article2 = new WxMpCustomMessage.WxArticle();
+        article2.setUrl(product.getLink());
+        article2.setPicUrl("https://static-s.aa-cdn.net/img/ios/883163015/154896985ec342eebff742a2cbca02d0?v=1");
+        article2.setTitle(product.getDescription_cn());
+
+        WxMpCustomMessage.WxArticle article3 = new WxMpCustomMessage.WxArticle();
+        article3.setUrl(product.getLink());
+        article3.setPicUrl("https://static-s.aa-cdn.net/img/ios/883163015/154896985ec342eebff742a2cbca02d0?v=1");
+        article3.setTitle("价格: "+ product.getPrice());
+
+        wxMpService.customMessageSend(WxMpCustomMessage.NEWS()
+                .toUser(toUser)
+                .addArticle(article1)
+                .addArticle(article2)
+                .addArticle(article3)
                 .build());
     }
 

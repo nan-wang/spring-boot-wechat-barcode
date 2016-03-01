@@ -1,11 +1,13 @@
 package com.ojins.app.controller;
 
-import com.ojins.app.handler.BarcodeImageHandler;
+import com.ojins.app.handler.BarcodeImageHandlerBean;
+import com.ojins.app.service.ProductService;
 import me.chanjar.weixin.common.util.StringUtils;
 import me.chanjar.weixin.mp.api.*;
 import me.chanjar.weixin.mp.bean.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlOutMessage;
 import me.chanjar.weixin.mp.bean.WxMpXmlOutTextMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +27,9 @@ public class WechatController extends BaseController{
     WxMpInMemoryConfigStorage config = new WxMpInMemoryConfigStorage();
     private WxMpService wxMpService = new WxMpServiceImpl();
     private WxMpMessageRouter wxMpMessageRouter;
-    BarcodeImageHandler barcodeImageHandler;
+    BarcodeImageHandlerBean barcodeImageHandlerBean;
+    @Autowired
+    private ProductService productService;
 
     public void setAppId(String appId) {
         this.appId = appId;
@@ -60,13 +64,13 @@ public class WechatController extends BaseController{
 
         wxMpMessageRouter = new WxMpMessageRouter(wxMpService);
 
-        barcodeImageHandler = new BarcodeImageHandler(wxMpService);
+        barcodeImageHandlerBean = new BarcodeImageHandlerBean(wxMpService, productService);
 
         wxMpMessageRouter
                 .rule()
                 .async(true)
                 .msgType("image") // forward anykind of image to barcode handler
-                .handler(barcodeImageHandler)
+                .handler(barcodeImageHandlerBean)
                 .end();
 
         // load the database
