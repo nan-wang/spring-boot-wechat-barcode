@@ -60,7 +60,6 @@ public class BarcodeImageHandlerBean extends BaseHandler implements WxMpMessageH
         logger.info("Media Id: {}", wxMpXmlMessage.getMediaId());
         logger.info("Media URL: {}", wxMpXmlMessage.getPicUrl());
         logger.info("Downloading media from server...");
-        // FIXME: The out message is already returned before the downloading complete.
         File file = wxMpService.mediaDownload(wxMpXmlMessage.getMediaId());
         logger.info("Done!");
 
@@ -89,16 +88,14 @@ public class BarcodeImageHandlerBean extends BaseHandler implements WxMpMessageH
 
             if (product == null) {
                 logger.warn("Barcode {} is not found in database.", resultMsg);
-                return WxMpXmlOutMessage
-                        .TEXT()
-                        .content("抱歉没有找到该产品")
-                        .fromUser(wxMpXmlMessage.getToUserName()) // now server is "from", client is "to"
-                        .toUser(wxMpXmlMessage.getFromUserName())
-                        .build();
+                sendAdvanceMessage(wxMpXmlMessage.getFromUserName(),
+                        wxMpXmlMessage.getPicUrl(),
+                        resultMsg);
+            } else {
+                sendAdvanceMessage(wxMpXmlMessage.getFromUserName(),
+                        wxMpXmlMessage.getPicUrl(),
+                        product);
             }
-            sendAdvanceMessage(wxMpXmlMessage.getFromUserName(),
-                    wxMpXmlMessage.getPicUrl(),
-                    product);
 
             // below is for syncronized version (under 5s, depreciated)
             return WxMpXmlOutMessage
@@ -139,21 +136,28 @@ public class BarcodeImageHandlerBean extends BaseHandler implements WxMpMessageH
 
 
     private void sendAdvanceMessage(String toUser, String largePicUrl, Product product) throws WxErrorException {
+        String tmp_link = "https://www.dm.de/"+product.getLink();
+        String product_link = "https://translate.google.de/translate?sl=de&tl=zh-CN&js=y&prev=_t&hl=en&ie=UTF-8&u="
+                + tmp_link.replaceAll(":", "%3A").replaceAll("/", "%2F");
 
         WxMpCustomMessage.WxArticle article1 = new WxMpCustomMessage.WxArticle();
-        article1.setUrl(product.getLink());
+        article1.setDescription("description");
+        article1.setTitle("title");
+        article1.setUrl(product_link);
         article1.setPicUrl(product.getImg());
         article1.setTitle(product.getBrand() + " " + product.getName());
 
         WxMpCustomMessage.WxArticle article2 = new WxMpCustomMessage.WxArticle();
-        article2.setUrl(product.getLink());
+        article2.setDescription("description");
+        article2.setTitle("title");
+        article2.setUrl(product_link);
         article2.setPicUrl("https://static-s.aa-cdn.net/img/ios/883163015/154896985ec342eebff742a2cbca02d0?v=1");
         article2.setTitle(product.getDescription_cn());
 
         WxMpCustomMessage.WxArticle article3 = new WxMpCustomMessage.WxArticle();
-        article3.setUrl(product.getLink());
+        article3.setUrl(product_link);
         article3.setPicUrl("https://static-s.aa-cdn.net/img/ios/883163015/154896985ec342eebff742a2cbca02d0?v=1");
-        article3.setTitle("价格: "+ product.getPrice());
+        article3.setTitle("€ "+ product.getPrice());
 
         wxMpService.customMessageSend(WxMpCustomMessage.NEWS()
                 .toUser(toUser)
@@ -165,16 +169,23 @@ public class BarcodeImageHandlerBean extends BaseHandler implements WxMpMessageH
 
 
     private void sendAdvanceMessage(String toUser, String largePicUrl, String barCode) throws WxErrorException {
+        String tmp_link = "https://www.dm.de/search/468652.html?type=product&cacheable=true&q="+barCode;
+        String product_link = "https://translate.google.de/translate?sl=de&tl=zh-CN&js=y&prev=_t&hl=en&ie=UTF-8&u="
+                + tmp_link.replaceAll(":", "%3A")
+                .replaceAll("/", "%2F")
+                .replaceAll("=", "%3D")
+                .replaceAll("\\?", "%3F")
+                .replaceAll("&", "%26");
 
         WxMpCustomMessage.WxArticle article1 = new WxMpCustomMessage.WxArticle();
-        article1.setUrl("http://ojins.com");
+        article1.setUrl(product_link);
         article1.setPicUrl(largePicUrl);
-        article1.setTitle("条形码:"+ barCode + "上面应该放开箱渲染图");
+        article1.setTitle("抱歉,未能找到: "+ barCode);
 
         WxMpCustomMessage.WxArticle article2 = new WxMpCustomMessage.WxArticle();
-        article2.setUrl("http://ojins.com");
-        article2.setPicUrl("http://lorempixel.com/200/200/cats/");
-        article2.setTitle("两行字的高度正好对齐200px");
+        article2.setUrl(product_link);
+        article2.setPicUrl("https://static-s.aa-cdn.net/img/ios/883163015/154896985ec342eebff742a2cbca02d0?v=1");
+        article2.setTitle("去网站看看");
 
         wxMpService.customMessageSend(WxMpCustomMessage.NEWS()
                 .toUser(toUser)

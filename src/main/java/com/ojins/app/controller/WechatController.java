@@ -127,7 +127,6 @@ public class WechatController extends BaseController{
                     new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)));
             WxMpXmlOutMessage outMessage = wxMpMessageRouter.route(inMessage);
             if (outMessage == null) {
-                logger.warn("Async is true, thats why out message is always null!");
                 return new ResponseEntity<>(HttpStatus.OK);
             }
             logger.info("明文传输的消息, content = {}",((WxMpXmlOutTextMessage) outMessage).getContent());
